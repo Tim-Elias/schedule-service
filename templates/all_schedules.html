@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+
+{% block content %}
+<!-- Подключение JavaScript файла -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="/static/js/all_schedules.js"></script>
+
+<h2>All Schedules</h2>
+
+<!-- Кнопка для возврата на страницу protected -->
+<a href="/active_schedules" class="btn btn-secondary mb-3">Back to Active Schedules</a>
+
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Method</th>
+            <th>URL</th>
+            <th>Interval (min)</th>
+            <th>Last Run</th>
+            <th>Status</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody id="allScheduleList">
+        <!-- Все расписания будут загружены через JS -->
+    </tbody>
+</table>
+
+
+
+{% endblock %}
