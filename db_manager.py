@@ -39,14 +39,16 @@ class Schedule(Base):
     method = Column(String(10), nullable=False)
     url = Column(String(255), nullable=False)
     data = Column(Text, nullable=True)
-    interval = Column(Integer, nullable=False)
+    interval = Column(Integer, nullable=True)  # Оставим nullable для случаев с типом "daily"
+    time_of_day = Column(Time, nullable=True)  # Время выполнения для типа "daily"
+    schedule_type = Column(String(50), nullable=False, default='interval')  # Тип расписания
     last_run = Column(DateTime, nullable=True)
-    is_active = Column(Boolean, default=True)  # Новое поле для проверки активности
+    is_active = Column(Boolean, default=True)
 
     request_logs = relationship("RequestLog", backref="schedule")
 
     def __repr__(self):
-        return f'<Schedule {self.id} {self.method} {self.url}>'
+        return f'<Schedule {self.id} {self.method} {self.url} {self.schedule_type}>'
 
 
 
@@ -93,16 +95,24 @@ class DatabaseManager:
         Base.metadata.create_all(self.engine)
 
     # Методы для работы с таблицей Schedule
-    def add_schedule(self, method, url, data, interval, last_run):
+    def add_schedule(self, method, url, data=None, interval=None, last_run=None, schedule_type='interval', time_of_day=None):
         session = self.Session()  # Открываем сессию
         try:
+            # Проверяем, что параметры корректны в зависимости от типа расписания
+            if schedule_type == 'interval' and not interval:
+                raise ValueError("Interval is required for 'interval' schedule type.")
+            if schedule_type == 'daily' and not time_of_day:
+                raise ValueError("Time of day is required for 'daily' schedule type.")
+            
             # Создаем объект Schedule
             new_schedule = Schedule(
                 method=method,
                 url=url,
                 data=data,
                 interval=interval,
-                last_run=last_run
+                last_run=last_run,
+                schedule_type=schedule_type,
+                time_of_day=time_of_day
             )
             
             # Добавляем объект в сессию
@@ -123,6 +133,7 @@ class DatabaseManager:
 
         finally:
             session.close()  # Закрываем сессию после всех операций
+
 
 
     def update_schedule(self, schedule):

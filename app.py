@@ -94,13 +94,25 @@ def execute_schedule(schedule_id):
         logging.error(f"Error during request: {e}")
 
 
-
+# Инициализация планировщика
 def initialize_scheduler():
     with app.app_context():
         schedules = db.get_active_schedules()
         for schedule in schedules:
-            interval_in_seconds = schedule.interval * 60
-            scheduler.add_job(execute_schedule, 'interval', seconds=interval_in_seconds, args=[schedule.id])
+            if schedule.schedule_type == 'interval':
+                interval_in_seconds = schedule.interval * 60
+                scheduler.add_job(execute_schedule, 'interval', seconds=interval_in_seconds, args=[schedule.id])
+            elif schedule.schedule_type == 'daily':
+                # Время выполнения
+                run_time = schedule.time_of_day
+                scheduler.add_job(
+                    execute_schedule,
+                    'cron',
+                    hour=run_time.hour, 
+                    minute=run_time.minute, 
+                    second=0,
+                    args=[schedule.id]
+                )
 
 
 
@@ -191,53 +203,93 @@ def add_schedule():
         data = request.json
         method = data.get('method')
         url = data.get('url')
-        interval = data.get('interval')  # Интервал в минутах
+        schedule_type = data.get('schedule_type')  # Новый параметр типа расписания
         post_data = data.get('data', None)  # Данные для POST-запроса (если это POST)
-        
-        # Логируем полученные данные для диагностики
-        logging.info(f"Received schedule data: method={method}, url={url}, interval={interval}, post_data={post_data}")
-        
-        if not method or not url or not interval:
-            logging.error("Missing required fields: Method, URL, and Interval are required")
-            return jsonify({"msg": "Method, URL, and interval are required"}), 400
 
-        # Преобразуем интервал в секунды
-        interval_in_seconds = int(interval) * 60
+        logging.info(f"Received schedule data: method={method}, url={url}, schedule_type={schedule_type}, post_data={post_data}")
+
+        # Проверяем наличие обязательных полей
+        if not method or not url or not schedule_type:
+            logging.error("Missing required fields: Method, URL, and Schedule Type are required")
+            return jsonify({"msg": "Method, URL, and schedule_type are required"}), 400
+
+        # Разные обработки в зависимости от типа расписания
+        if schedule_type == 'interval':
+            interval = data.get('interval')  # Интервал в минутах
+            if not interval:
+                logging.error("Missing interval for interval schedule")
+                return jsonify({"msg": "Interval is required for interval schedule"}), 400
+
+            interval_in_seconds = int(interval) * 60
+            logging.debug(f"Converted interval to seconds: {interval_in_seconds}")
+
+            # Добавляем новое расписание в базу данных
+            new_schedule = db.add_schedule(
+                method=method,
+                url=url,
+                data=post_data,
+                interval=interval,  # Интервал сохраняем
+                schedule_type='interval',
+                last_run=datetime.utcnow()
+            )
+
+            # Логируем успешное добавление в БД
+            logging.info(f"New interval schedule added to database with ID: {new_schedule.id}")
+
+            # Добавляем задачу в планировщик по интервалу
+            scheduler.add_job(
+                execute_schedule, 
+                'interval', 
+                seconds=interval_in_seconds, 
+                args=[new_schedule.id], 
+                id=f"schedule_{new_schedule.id}"
+            )
+            # Запускаем задачу немедленно после создания
+            execute_schedule(new_schedule.id)
+            logging.info(f"Scheduled interval job created and executed for schedule ID: {new_schedule.id}")
+
+        elif schedule_type == 'daily':
+            time_of_day = data.get('time_of_day')  # Время выполнения задачи
+            if not time_of_day:
+                logging.error("Missing time_of_day for daily schedule")
+                return jsonify({"msg": "Time of day is required for daily schedule"}), 400
+
+            # Преобразуем строку времени в объект времени
+            time_of_day_obj = datetime.strptime(time_of_day, '%H:%M').time()
+
+            # Добавляем новое ежедневное расписание в базу данных
+            new_schedule = db.add_schedule(
+                method=method,
+                url=url,
+                data=post_data,
+                schedule_type='daily',
+                time_of_day=time_of_day_obj,  # Время выполнения
+                last_run=None
+            )
+
+            # Логируем успешное добавление в БД
+            logging.info(f"New daily schedule added to database with ID: {new_schedule.id}")
+
+            # Добавляем задачу в планировщик для ежедневного выполнения
+            scheduler.add_job(
+                execute_schedule, 
+                'cron', 
+                hour=time_of_day_obj.hour, 
+                minute=time_of_day_obj.minute, 
+                second=0,
+                args=[new_schedule.id],
+                id=f"schedule_{new_schedule.id}"
+            )
+
+            logging.info(f"Scheduled daily job created for schedule ID: {new_schedule.id}")
+
+        else:
+            logging.error("Invalid schedule type provided")
+            return jsonify({"msg": "Invalid schedule type"}), 400
+
         
-        # Логируем преобразованный интервал
-        logging.debug(f"Converted interval to seconds: {interval_in_seconds}")
 
-        # Добавляем новое расписание в базу данных
-        new_schedule = db.add_schedule(
-            method=method,
-            url=url,
-            data=post_data,
-            interval=interval,
-            last_run=datetime.utcnow()
-        )
-        
-        if not new_schedule:
-            raise Exception("Failed to add schedule to database")
-
-        
-        # Логируем успешное добавление расписания в БД
-        logging.info(f"New schedule added to database with ID: {new_schedule.id}")
-        
-        # Добавляем задачу в планировщик
-        scheduler.add_job(
-            execute_schedule, 
-            'interval', 
-            seconds=interval_in_seconds, 
-            args=[new_schedule.id], 
-            id=f"schedule_{new_schedule.id}"
-        )
-
-        # Логируем успешное добавление задачи в планировщик
-        logging.info(f"Scheduled job created for schedule ID: {new_schedule.id}")
-
-        execute_schedule(new_schedule.id)
-
-        # Логируем успешное выполнение задачи в планировщик
+        # Логируем успешное выполнение задачи
         logging.info(f"Scheduled job executed for schedule ID: {new_schedule.id}")
 
         return jsonify({"msg": "Schedule created and task added successfully"}), 201
@@ -248,20 +300,33 @@ def add_schedule():
         return jsonify({"msg": "Failed to create schedule", "error": str(e)}), 500
 
 
-# Получение списка расписаний
+# Получение списка активных расписаний
 @app.route('/schedules', methods=['GET'])
 @jwt_required()
 def get_schedules():
     schedules = db.get_active_schedules()
-    schedules_data = [{
-        "id": s.id,
-        "method": s.method,
-        "url": s.url,
-        "interval": s.interval,
-        "last_run": s.last_run
-    } for s in schedules]
+    schedules_data = []
 
+    for s in schedules:
+        schedule_info = {
+            "id": s.id,
+            "method": s.method,
+            "url": s.url,
+            "last_run": s.last_run,
+            "is_active": s.is_active
+        }
+
+        if s.schedule_type == 'interval':
+            schedule_info['schedule_type'] = 'interval'
+            schedule_info['interval'] = s.interval
+        elif s.schedule_type == 'daily':
+            schedule_info['schedule_type'] = 'daily'
+            schedule_info['time_of_day'] = s.time_of_day.strftime('%H:%M') if s.time_of_day else None
+        
+        schedules_data.append(schedule_info)
+    
     return jsonify(schedules=schedules_data), 200
+
 
 
 # Получение всех расписаний
@@ -270,17 +335,30 @@ def get_schedules():
 def get_all_schedules():
     logging.debug('Request to /all_schedules_get received')
     schedules = db.get_all_schedules()
-    schedules_data = [{
-        "id": s.id,
-        "method": s.method,
-        "url": s.url,
-        "interval": s.interval,
-        "last_run": s.last_run,
-        "is_active": s.is_active
-    } for s in schedules]
+    schedules_data = []
+
+    for s in schedules:
+        schedule_info = {
+            "id": s.id,
+            "method": s.method,
+            "url": s.url,
+            "last_run": s.last_run,
+            "is_active": s.is_active
+        }
+
+        if s.schedule_type == 'interval':
+            schedule_info['schedule_type'] = 'interval'
+            schedule_info['interval'] = s.interval
+        elif s.schedule_type == 'daily':
+            schedule_info['schedule_type'] = 'daily'
+            schedule_info['time_of_day'] = s.time_of_day.strftime('%H:%M') if s.time_of_day else None
+        
+        schedules_data.append(schedule_info)
 
     logging.debug('Schedules data prepared')
     return jsonify(schedules=schedules_data), 200
+
+
 
 
 # Получение активных логов
@@ -324,25 +402,42 @@ def activate_schedule(id):
         return jsonify({"message": "Schedule not found"}), 404
     
     schedule.is_active = True
-
     db.update_schedule(schedule)
-    # Преобразуем интервал в секунды
-    interval_in_seconds = int(schedule.interval) * 60
-    # Добавляем задачу в планировщик
-    scheduler.add_job(
-        execute_schedule, 
-        'interval', 
-        seconds=interval_in_seconds, 
-        args=[schedule.id], 
-        id=f"schedule_{schedule.id}"
-    )
 
-        # Логируем успешное добавление задачи в планировщик
-    logging.info(f"Scheduled job created for schedule ID: {schedule.id}")
+    if schedule.schedule_type == 'interval':
+        # Преобразуем интервал в секунды для интервала
+        interval_in_seconds = int(schedule.interval) * 60
+        # Добавляем задачу в планировщик
+        scheduler.add_job(
+            execute_schedule, 
+            'interval', 
+            seconds=interval_in_seconds, 
+            args=[schedule.id], 
+            id=f"schedule_{schedule.id}"
+        )
+        # Немедленный запуск задачи
+        execute_schedule(schedule.id)
+        logging.info(f"Scheduled job created and executed for schedule ID: {schedule.id} (interval)")
+    
+    elif schedule.schedule_type == 'daily':
+        # Преобразуем время в строковый формат для планировщика
+        schedule_time = schedule.time_of_day.strftime('%H:%M:%S')
+        # Добавляем задачу в планировщик
+        scheduler.add_job(
+            execute_schedule, 
+            'cron', 
+            hour=schedule.time_of_day.hour, 
+            minute=schedule.time_of_day.minute, 
+            second=schedule.time_of_day.second, 
+            args=[schedule.id], 
+            id=f"schedule_{schedule.id}"
+        )
+        logging.info(f"Scheduled job created for schedule ID: {schedule.id} (daily at {schedule.time_of_day})")
 
     
-    execute_schedule(schedule.id)
+    
     return jsonify({"message": "Schedule activated"}), 200
+
 
 
 # Деактивация расписания
@@ -355,7 +450,10 @@ def deactivate_schedule(id):
     
     schedule.is_active = False
     db.update_schedule(schedule)
+    job_id = f"schedule_{id}"
+    scheduler.remove_job(job_id)
     return jsonify({"message": "Schedule deactivated"}), 200
+
 
 # Пример функции обновления расписания
 @app.route('/schedule/<int:schedule_id>', methods=['PUT'])
@@ -371,13 +469,24 @@ def update_schedule(schedule_id):
     # Обновляем поля расписания
     schedule.method = data['method']
     schedule.url = data['url']
-    schedule.interval = data['interval']
+    
+    if data.get('schedule_type') == 'interval':
+        schedule.schedule_type = 'interval'
+        schedule.interval = data['interval']
+        schedule.time_of_day = None  # Убираем время, если было
+    
+    elif data.get('schedule_type') == 'daily':
+        schedule.schedule_type = 'daily'
+        schedule.time_of_day = data['time_of_day']
+        schedule.interval = None  # Убираем интервал, если был
+
     schedule.data = data.get('data')
     
     # Сохраняем обновленное расписание
     db.update_schedule(schedule)
     
     return jsonify({'message': 'Schedule updated successfully'}), 200
+
 
 
 if __name__ == '__main__':

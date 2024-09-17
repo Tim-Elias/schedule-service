@@ -2,13 +2,11 @@ $(document).ready(function() {
     // Проверка наличия токена в localStorage
     const token = localStorage.getItem('jwt_token');
 
-    // Если токен отсутствует, перенаправляем на страницу логина
     if (!token) {
         window.location.href = '/';
     } else {
-        // Если токен есть, вы можете дополнительно проверить его действительность
         $.ajax({
-            url: '/active_schedules',  // Необходимо добавить этот маршрут на сервере
+            url: '/active_schedules',
             type: 'GET',
             headers: {
                 'Authorization': 'Bearer ' + token
@@ -16,11 +14,8 @@ $(document).ready(function() {
             success: function(response) {
                 loadSchedulesActive();
                 loadLogsActive();
-                // Токен действителен, страница загружается
-                // Дополнительный код для загрузки защищенной информации, если необходимо
             },
             error: function(xhr, status, error) {
-                // Если токен недействителен, перенаправляем на страницу логина
                 window.location.href = '/';
             }
         });
@@ -35,25 +30,32 @@ $(document).ready(function() {
         }
     });
 
-    //loadSchedulesActive();
-    //loadLogsActive();
+    // Переключение между типами расписаний (interval/daily)
+    $('#schedule_type').on('change', function() {
+        if ($(this).val() === 'interval') {
+            $('#intervalDiv').show();
+            $('#timeOfDayDiv').hide();
+            $('#interval').prop('required', true);
+            $('#time_of_day').prop('required', false);
+        } else if ($(this).val() === 'daily') {
+            $('#intervalDiv').hide();
+            $('#timeOfDayDiv').show();
+            $('#interval').prop('required', false);
+            $('#time_of_day').prop('required', true);
+        }
+    });
 
-    // Автоматическое обновление данных каждые 30 секунд
-    setInterval(function() {
-        loadSchedulesActive();
-        loadLogsActive();
-        
-    }, 30000);  // 30000 миллисекунд = 30 секунд
-
-    // Добавление нового расписания
+    // Обработка отправки формы
     $('#scheduleForm').on('submit', function(event) {
         event.preventDefault();
-    
+
         let method = $('#method').val();
         let url = $('#url').val();
-        let interval = $('#interval').val();
+        let scheduleType = $('#schedule_type').val();
+        let interval = scheduleType === 'interval' ? $('#interval').val() : null;
+        let timeOfDay = scheduleType === 'daily' ? $('#time_of_day').val() : null;
         let data = $('#data').val();
-    
+
         $.ajax({
             url: '/schedule',
             type: 'POST',
@@ -64,32 +66,34 @@ $(document).ready(function() {
             data: JSON.stringify({
                 method: method,
                 url: url,
+                schedule_type: scheduleType,
                 interval: interval,
+                time_of_day: timeOfDay,
                 data: method === 'POST' ? data : null
             }),
             success: function() {
-                loadSchedulesActive(); // Обновление активных расписаний
-                loadLogsActive(); //Обновление активных логов
+                loadSchedulesActive();
+                loadLogsActive();
                 $('#scheduleForm')[0].reset();
                 $('#postDataDiv').hide();
+                $('#intervalDiv').show();
+                $('#timeOfDayDiv').hide();
             },
             error: function(xhr, status, error) {
                 console.error('Error adding schedule:', status, error);
             }
         });
     });
-    
 
-    // Загрузка логов активных расписаний при нажатии кнопки
-    $('#loadActiveLogs').on('click', function() {
-        loadLogs();
-    });
+    // Автоматическое обновление данных каждые 30 секунд
+    setInterval(function() {
+        // loadSchedulesActive();
+        loadLogsActive();
+    }, 30000);  // 30000 миллисекунд = 30 секунд
 });
 
-
-// Загрузка расписаний
+// Загрузка активных расписаний
 function loadSchedulesActive() {
-    console.log('Loading schedules...');
     $.ajax({
         url: '/schedules',
         type: 'GET',
@@ -98,16 +102,22 @@ function loadSchedulesActive() {
         },
         data: { _: new Date().getTime() },
         success: function(response) {
-            console.log('Schedules loaded:', response);
             let scheduleList = $('#scheduleList');
             scheduleList.empty();
             response.schedules.forEach(schedule => {
-                scheduleList.prepend(`
+                let scheduleType = schedule.schedule_type === 'interval' 
+                    ? `Interval (${schedule.interval} min)` 
+                    : `Daily at ${schedule.time_of_day}`;
+
+                //let lastRun = schedule.last_run ? new Date(schedule.last_run).toLocaleString() : 'Never';
+
+                
+                scheduleList.append(` <!-- Заменено prepend на append -->
                     <tr>
                         <td>${schedule.id}</td>
                         <td>${schedule.method}</td>
                         <td>${schedule.url}</td>
-                        <td>${schedule.interval}</td>
+                        <td>${scheduleType}</td>
                         <td>${schedule.last_run || 'Never'}</td>
                         <td><button class="btn btn-danger" onclick="deactivateScheduleActive(${schedule.id})">Deactivate</button></td>
                     </tr>
@@ -120,20 +130,20 @@ function loadSchedulesActive() {
     });
 }
 
+
+
 // Загрузка логов
 function loadLogsActive(scheduleId = null) {
-    console.log('Loading logs...');
     $.ajax({
         url: scheduleId ? `/logs/${scheduleId}` : '/logs/active',
         type: 'GET',
         headers: {
             'Authorization': 'Bearer ' + localStorage.getItem('jwt_token')
         },
-        data: { _: new Date().getTime() }, // Добавление параметра времени для предотвращения кэширования
+        data: { _: new Date().getTime() },
         success: function(response) {
-            console.log('Logs loaded:', response);
             let logList = $('#logList');
-            logList.empty(); // Очищаем список перед добавлением новых данных
+            logList.empty();
             response.logs.forEach(log => {
                 logList.prepend(`
                     <tr>
@@ -150,7 +160,6 @@ function loadLogsActive(scheduleId = null) {
     });
 }
 
-
 // Деактивация расписания
 function deactivateScheduleActive(id) {
     $.ajax({
@@ -160,7 +169,8 @@ function deactivateScheduleActive(id) {
             'Authorization': 'Bearer ' + localStorage.getItem('jwt_token')
         },
         success: function() {
-            loadSchedulesActive(); // Обновление активных расписаний
+            loadSchedulesActive();
+            loadLogsActive();
         },
         error: function(xhr, status, error) {
             console.error('Error deactivating schedule:', status, error);

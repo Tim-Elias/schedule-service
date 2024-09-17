@@ -1,61 +1,84 @@
-
-
 $(document).ready(function() {
     // Загрузка всех расписаний
     loadAllSchedules();
-    
+
     // Автоматическое обновление данных каждые 30 секунд
     setInterval(function() {
         loadAllSchedules();
-        loadLogs();
-        
-    }, 30000);  // 30000 миллисекунд = 30 секунд
-
-
+    }, 30000);
 
     // Скрыть форму редактирования
     function hideEditForm() {
-        $('#scheduleEditFormContainer').hide(); // Скрыть контейнер формы
-        $('#scheduleEditForm')[0].reset();      // Сбросить поля формы
+        $('#scheduleEditFormContainer').hide();
+        $('#scheduleEditForm')[0].reset();
     }
 
     // Обработчик отправки формы редактирования
-    // Обработчик отправки формы редактирования
-$('#scheduleEditForm').on('submit', function(event) {
-    event.preventDefault();
+    $('#scheduleEditForm').on('submit', function(event) {
+        event.preventDefault();
 
-    let id = $('#editScheduleId').val();
-    let method = $('#editMethod').val();
-    let url = $('#editUrl').val();
-    let interval = $('#editInterval').val();
-    let data = method === 'POST' ? $('#editData').val() : null;
+        let id = $('#editScheduleId').val();
+        let method = $('#editMethod').val();
+        let url = $('#editUrl').val();
+        let scheduleType = $('#editScheduleType').val();
+        let interval = scheduleType === 'interval' ? $('#editInterval').val() : null;
+        let dailyTime = scheduleType === 'daily' ? $('#editDailyTime').val() : null;
+        let data = method === 'POST' ? $('#editData').val() : null;
 
-    $.ajax({
-        url: `/schedule/${id}`,
-        type: 'PUT',
-        contentType: 'application/json',
-        headers: {
-            'Authorization': 'Bearer ' + localStorage.getItem('jwt_token')
-        },
-        data: JSON.stringify({
-            method: method,
-            url: url,
-            interval: interval,
-            data: data
-        }),
-        success: function() {
-            loadAllSchedules(); // Обновление списка расписаний
-            hideEditForm();     // Скрыть форму редактирования
-        },
-        error: function(xhr, status, error) {
-            console.error('Error updating schedule:', status, error);
+        $.ajax({
+            url: `/schedule/${id}`,
+            type: 'PUT',
+            contentType: 'application/json',
+            headers: {
+                'Authorization': 'Bearer ' + localStorage.getItem('jwt_token')
+            },
+            data: JSON.stringify({
+                method: method,
+                url: url,
+                schedule_type: scheduleType,
+                interval: interval,
+                time_of_day: dailyTime,
+                data: data
+            }),
+            success: function() {
+                loadAllSchedules(); // Обновление списка расписаний
+                hideEditForm();     // Скрыть форму редактирования
+            },
+            error: function(xhr, status, error) {
+                console.error('Error updating schedule:', status, error);
+            }
+        });
+    });
+
+    // Показать форму редактирования с данными расписания
+    window.editSchedule = function(scheduleId, method, url, scheduleType, interval, dailyTime, data) {
+        $('#scheduleEditFormContainer').show();
+        $('#editScheduleId').val(scheduleId);
+        $('#editMethod').val(method);
+        $('#editUrl').val(url);
+        $('#editScheduleType').val(scheduleType);
+        
+        // Показать/скрыть поля в зависимости от типа расписания
+        if (scheduleType === 'interval') {
+            $('#editIntervalDiv').show();
+            $('#editInterval').val(interval || '');
+            $('#editDailyTimeDiv').hide();
+        } else if (scheduleType === 'daily') {
+            $('#editDailyTimeDiv').show();
+            $('#editDailyTime').val(dailyTime || '');
+            $('#editIntervalDiv').hide();
         }
-    });
-    });
+
+        // Показать поле для POST данных, если метод POST
+        if (method === 'POST') {
+            $('#editPostDataDiv').show();
+            $('#editData').val(data || '');
+        } else {
+            $('#editPostDataDiv').hide();
+        }
+    };
 });
 
-
-// Загрузка всех расписаний
 // Загрузка всех расписаний
 function loadAllSchedules() {
     console.log('Loading all schedules...');
@@ -67,15 +90,12 @@ function loadAllSchedules() {
         },
         data: { _: new Date().getTime() },
         success: function(response) {
-            console.log('Response:', response);  // Выводим ответ в консоль
+            console.log('Response:', response);
             let allScheduleList = $('#allScheduleList');
             allScheduleList.empty();
 
-            // Проверяем, существует ли ключ `schedules` и является ли он массивом
             if (Array.isArray(response.schedules)) {
-                // Сортируем расписания. Например, по ID, чтобы новые всегда шли внизу
                 response.schedules.sort((a, b) => a.id - b.id);
-
                 response.schedules.forEach(schedule => {
                     let actionButton = schedule.is_active 
                         ? `<button class="btn btn-warning" onclick="deactivateScheduleAll(${schedule.id})">Deactivate</button>`
@@ -85,14 +105,14 @@ function loadAllSchedules() {
                         ? `<a href="/schedule_details?id=${schedule.id}" class="btn btn-info">View Logs</a>`
                         : '';
 
-                    let editButton = `<button class="btn btn-primary" onclick="editSchedule(${schedule.id}, '${schedule.method}', '${schedule.url}', ${schedule.interval}, '${schedule.data || ''}')">Edit</button>`;
+                    let editButton = `<button class="btn btn-primary" onclick="editSchedule(${schedule.id}, '${schedule.method}', '${schedule.url}', '${schedule.schedule_type}', ${schedule.interval || null}, '${schedule.daily_time || ''}', '${schedule.data || ''}')">Edit</button>`;
 
-                    allScheduleList.append(`  <!-- Используем append, чтобы новые записи добавлялись в конец -->
+                    allScheduleList.append(`
                         <tr>
                             <td>${schedule.id}</td>
                             <td>${schedule.method}</td>
                             <td>${schedule.url}</td>
-                            <td>${schedule.interval}</td>
+                            <td>${schedule.schedule_type === 'interval' ? schedule.interval + ' min' : schedule.time_of_day}</td>
                             <td>${schedule.last_run || 'Never'}</td>
                             <td>${schedule.is_active ? 'Active' : 'Inactive'}</td>
                             <td>
@@ -112,8 +132,6 @@ function loadAllSchedules() {
         }
     });
 }
-
-
 
 // Активация расписания
 function activateScheduleAll(id) {
@@ -141,28 +159,10 @@ function deactivateScheduleAll(id) {
             'Authorization': 'Bearer ' + localStorage.getItem('jwt_token')
         },
         success: function() {
-            loadAllSchedules(); // Обновление всех расписаний
+            loadAllSchedules();
         },
         error: function(xhr, status, error) {
             console.error('Error deactivating schedule:', status, error);
         }
     });
-}
-
-
-// Показать форму редактирования с данными расписания
-// Показать форму редактирования с данными расписания
-function editSchedule(scheduleId, method, url, interval, data) {
-    $('#scheduleEditFormContainer').show();  // Показываем контейнер с формой
-    $('#editScheduleId').val(scheduleId);
-    $('#editMethod').val(method);
-    $('#editUrl').val(url);
-    $('#editInterval').val(interval);
-
-    if (method === 'POST') {
-        $('#editPostDataDiv').show();
-        $('#editData').val(data || '');
-    } else {
-        $('#editPostDataDiv').hide();
-    }
 }
