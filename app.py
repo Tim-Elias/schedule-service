@@ -1,4 +1,7 @@
 from flask import Flask, render_template, jsonify, request, redirect, url_for
+from functools import wraps
+from flask import request, redirect, url_for, session, flash
+from flask_jwt_extended import verify_jwt_in_request, get_jwt_identity, JWTManager
 from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity
 from datetime import datetime
 from apscheduler.schedulers.background import BackgroundScheduler
@@ -18,15 +21,33 @@ load_dotenv()
 app = Flask(__name__)
 
 # Секретный ключ для подписи JWT
-app.config['JWT_SECRET_KEY'] = os.getenv('SECRET_KEY')  # Замените на более безопасный ключ в продакшене
+#app.config['JWT_SECRET_KEY'] = os.getenv('SECRET_KEY')  # Замените на более безопасный ключ в продакшене
 
+app.secret_key=os.getenv('SECRET_KEY')
 
 jwt = JWTManager(app)
 
 # Настройка логирования
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
 
-
+def jwt_optional(fn):
+    @wraps(fn)
+    def wrapper(*args, **kwargs):
+        token = session.get('access_token')
+        if token:
+            try:
+                # Устанавливаем токен в заголовок авторизации для проверки
+                request.headers.environ['HTTP_AUTHORIZATION'] = f'Bearer {token}'
+                verify_jwt_in_request()
+            except:
+                # Если токен недействителен или другая ошибка, удаляем его из сессии и перенаправляем на логин
+                session.pop('access_token', None)
+                flash('Invalid session, please log in again.', 'danger')
+                return redirect(url_for('login'))
+        else:
+            return redirect(url_for('login'))
+        return fn(*args, **kwargs)
+    return wrapper
 
 
 
@@ -87,6 +108,8 @@ def initialize_scheduler():
 # Маршрут для главной страницы
 @app.route('/')
 def index():
+    if 'jwt_token' in request.cookies:
+        return redirect('/active_schedules')  # Перенаправляем авторизованных пользователей на активные расписания
     return render_template('login.html')
 
 """# Маршрут для регистрации
@@ -107,8 +130,8 @@ def register():
         db.session.commit()"""
 
 # Маршрут для входа (авторизации)
-@app.route('/login', methods=['POST'])
-def login():
+@app.route('/auth', methods=['POST'])
+def auth():
     username = request.json.get("username", None)
     password = request.json.get("password", None)
 
@@ -117,16 +140,25 @@ def login():
         return jsonify({"msg": "Bad username or password"}), 401
 
     # Генерируем JWT токен
+    
     access_token = create_access_token(identity=username)
+    session['access_token'] = access_token
     return jsonify(access_token=access_token)
 
+@app.route('/login', methods=['GET'])
+def login():
+    return render_template('login.html')
 
-@app.errorhandler(401)
-def unauthorized_error(error):
-    return jsonify({"msg": "Unauthorized access"}), 401
-
+"""@app.route('/validate_token', methods=['GET'])
+@jwt_optional()
+def validate_token():
+    # Если токен действителен, возвращаем успешный ответ
+    current_user = get_jwt_identity()
+    return jsonify(logged_in_as=current_user), 200
+"""
 # Защищённый маршрут
 @app.route('/active_schedules')
+@jwt_optional
 def protected():
     return render_template('active_schedules.html')
     
@@ -135,6 +167,7 @@ def protected():
 
 # Маршрут деталей о расписании
 @app.route('/schedule_details', methods=['GET'])
+@jwt_optional
 def schedule_details():
     schedule_id = request.args.get('id', type=int)
     if not schedule_id:
@@ -146,6 +179,7 @@ def schedule_details():
 
 # Страница всех расписаний
 @app.route('/all_schedules', methods=['GET'])
+@jwt_optional
 def all_schedules():
     return render_template('all_schedules.html')
 

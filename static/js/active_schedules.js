@@ -1,4 +1,31 @@
 $(document).ready(function() {
+    // Проверка наличия токена в localStorage
+    const token = localStorage.getItem('jwt_token');
+
+    // Если токен отсутствует, перенаправляем на страницу логина
+    if (!token) {
+        window.location.href = '/';
+    } else {
+        // Если токен есть, вы можете дополнительно проверить его действительность
+        $.ajax({
+            url: '/active_schedules',  // Необходимо добавить этот маршрут на сервере
+            type: 'GET',
+            headers: {
+                'Authorization': 'Bearer ' + token
+            },
+            success: function(response) {
+                loadSchedulesActive();
+                loadLogsActive();
+                // Токен действителен, страница загружается
+                // Дополнительный код для загрузки защищенной информации, если необходимо
+            },
+            error: function(xhr, status, error) {
+                // Если токен недействителен, перенаправляем на страницу логина
+                window.location.href = '/';
+            }
+        });
+    }
+
     // Показать поле POST данных, если выбран POST метод
     $('#method').on('change', function() {
         if ($(this).val() === 'POST') {
@@ -8,8 +35,8 @@ $(document).ready(function() {
         }
     });
 
-    loadSchedulesActive();
-    loadLogsActive();
+    //loadSchedulesActive();
+    //loadLogsActive();
 
     // Автоматическое обновление данных каждые 30 секунд
     setInterval(function() {

@@ -9,7 +9,7 @@ $(document).ready(function() {
         let password = $('#password').val();
 
         $.ajax({
-            url: '/login',
+            url: '/auth',
             type: 'POST',
             contentType: 'application/json',
             data: JSON.stringify({ username: username, password: password }),
