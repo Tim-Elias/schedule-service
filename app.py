@@ -1,6 +1,6 @@
 from flask import Flask, render_template, jsonify, request, redirect, url_for
 from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity
-from datetime import datetime, timedelta
+from datetime import datetime
 from apscheduler.schedulers.background import BackgroundScheduler
 import requests
 import logging
@@ -59,7 +59,7 @@ def execute_schedule(schedule_id):
         logging.debug(f"Response: {response.text}")
         
         # Логируем результат запроса
-        log = db.add_request_log(
+        db.add_request_log(
             schedule_id=schedule.id,
             response=response.text
         )

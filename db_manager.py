@@ -3,9 +3,8 @@ from sqlalchemy import create_engine, Column, String, Integer, Text, DateTime, F
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, relationship
 from datetime import datetime
-from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, relationship
-from sqlalchemy import select, exists, update
+from sqlalchemy import exists
 import sqlalchemy
 import logging
 from werkzeug.security import generate_password_hash, check_password_hash
