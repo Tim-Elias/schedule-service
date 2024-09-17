@@ -19,7 +19,8 @@ app = Flask(__name__)
 
 # Секретный ключ для подписи JWT
 app.config['JWT_SECRET_KEY'] = os.getenv('SECRET_KEY')  # Замените на более безопасный ключ в продакшене
-
+port:int = os.getenv('PORT')
+debug:bool = os.getenv('DEBUG')
 
 jwt = JWTManager(app)
 
@@ -304,5 +305,5 @@ def deactivate_schedule(id):
 if __name__ == '__main__':
     with app.app_context():
         initialize_scheduler()
-    app.run(debug=True)
+    app.run(debug=debug, port=port)
 
