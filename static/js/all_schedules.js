@@ -11,7 +11,49 @@ $(document).ready(function() {
         
     }, 30000);  // 30000 миллисекунд = 30 секунд
 
+
+
+    // Скрыть форму редактирования
+    function hideEditForm() {
+        $('#scheduleEditFormContainer').hide(); // Скрыть контейнер формы
+        $('#scheduleEditForm')[0].reset();      // Сбросить поля формы
+    }
+
+    // Обработчик отправки формы редактирования
+    // Обработчик отправки формы редактирования
+$('#scheduleEditForm').on('submit', function(event) {
+    event.preventDefault();
+
+    let id = $('#editScheduleId').val();
+    let method = $('#editMethod').val();
+    let url = $('#editUrl').val();
+    let interval = $('#editInterval').val();
+    let data = method === 'POST' ? $('#editData').val() : null;
+
+    $.ajax({
+        url: `/schedule/${id}`,
+        type: 'PUT',
+        contentType: 'application/json',
+        headers: {
+            'Authorization': 'Bearer ' + localStorage.getItem('jwt_token')
+        },
+        data: JSON.stringify({
+            method: method,
+            url: url,
+            interval: interval,
+            data: data
+        }),
+        success: function() {
+            loadAllSchedules(); // Обновление списка расписаний
+            hideEditForm();     // Скрыть форму редактирования
+        },
+        error: function(xhr, status, error) {
+            console.error('Error updating schedule:', status, error);
+        }
+    });
+    });
 });
+
 
 // Загрузка всех расписаний
 // Загрузка всех расписаний
@@ -43,6 +85,8 @@ function loadAllSchedules() {
                         ? `<a href="/schedule_details?id=${schedule.id}" class="btn btn-info">View Logs</a>`
                         : '';
 
+                    let editButton = `<button class="btn btn-primary" onclick="editSchedule(${schedule.id}, '${schedule.method}', '${schedule.url}', ${schedule.interval}, '${schedule.data || ''}')">Edit</button>`;
+
                     allScheduleList.append(`  <!-- Используем append, чтобы новые записи добавлялись в конец -->
                         <tr>
                             <td>${schedule.id}</td>
@@ -54,6 +98,7 @@ function loadAllSchedules() {
                             <td>
                                 ${actionButton}
                                 ${viewLogsButton}
+                                ${editButton}
                             </td>
                         </tr>
                     `);
@@ -104,3 +149,20 @@ function deactivateScheduleAll(id) {
     });
 }
 
+
+// Показать форму редактирования с данными расписания
+// Показать форму редактирования с данными расписания
+function editSchedule(scheduleId, method, url, interval, data) {
+    $('#scheduleEditFormContainer').show();  // Показываем контейнер с формой
+    $('#editScheduleId').val(scheduleId);
+    $('#editMethod').val(method);
+    $('#editUrl').val(url);
+    $('#editInterval').val(interval);
+
+    if (method === 'POST') {
+        $('#editPostDataDiv').show();
+        $('#editData').val(data || '');
+    } else {
+        $('#editPostDataDiv').hide();
+    }
+}

@@ -77,7 +77,6 @@ def execute_schedule(schedule_id):
 def initialize_scheduler():
     with app.app_context():
         schedules = db.get_active_schedules()
-        print(schedules)
         for schedule in schedules:
             interval_in_seconds = schedule.interval * 60
             scheduler.add_job(execute_schedule, 'interval', seconds=interval_in_seconds, args=[schedule.id])
@@ -291,7 +290,24 @@ def activate_schedule(id):
         return jsonify({"message": "Schedule not found"}), 404
     
     schedule.is_active = True
+
     db.update_schedule(schedule)
+    # Преобразуем интервал в секунды
+    interval_in_seconds = int(schedule.interval) * 60
+    # Добавляем задачу в планировщик
+    scheduler.add_job(
+        execute_schedule, 
+        'interval', 
+        seconds=interval_in_seconds, 
+        args=[schedule.id], 
+        id=f"schedule_{schedule.id}"
+    )
+
+        # Логируем успешное добавление задачи в планировщик
+    logging.info(f"Scheduled job created for schedule ID: {schedule.id}")
+
+    
+    execute_schedule(schedule.id)
     return jsonify({"message": "Schedule activated"}), 200
 
 
@@ -306,6 +322,29 @@ def deactivate_schedule(id):
     schedule.is_active = False
     db.update_schedule(schedule)
     return jsonify({"message": "Schedule deactivated"}), 200
+
+# Пример функции обновления расписания
+@app.route('/schedule/<int:schedule_id>', methods=['PUT'])
+def update_schedule(schedule_id):
+    data = request.json
+    
+    # Логика поиска расписания в базе данных
+    schedule = db.get_schedule_by_id(schedule_id)
+    
+    if schedule is None:
+        return jsonify({'error': 'Schedule not found'}), 404
+    
+    # Обновляем поля расписания
+    schedule.method = data['method']
+    schedule.url = data['url']
+    schedule.interval = data['interval']
+    schedule.data = data.get('data')
+    
+    # Сохраняем обновленное расписание
+    db.update_schedule(schedule)
+    
+    return jsonify({'message': 'Schedule updated successfully'}), 200
+
 
 if __name__ == '__main__':
     with app.app_context():
