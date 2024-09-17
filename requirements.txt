@@ -3,7 +3,7 @@ Flask-Login
 Flask-JWT-Extended
 SQLAlchemy
 werkzeug
-dotenv
+python-dotenv
 requests
 apscheduler
 datetime
