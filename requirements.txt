@@ -3,7 +3,6 @@ Flask-Login
 Flask-JWT-Extended
 SQLAlchemy
 werkzeug
-os
 dotenv
 requests
 apscheduler
