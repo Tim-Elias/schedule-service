@@ -42,6 +42,7 @@ $(document).ready(function() {
             }),
             success: function() {
                 loadSchedulesActive(); // Обновление активных расписаний
+                loadLogsActive(); //Обновление активных логов
                 $('#scheduleForm')[0].reset();
                 $('#postDataDiv').hide();
             },

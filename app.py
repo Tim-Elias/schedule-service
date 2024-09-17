@@ -186,6 +186,7 @@ def add_schedule():
         if not new_schedule:
             raise Exception("Failed to add schedule to database")
 
+        
         # Логируем успешное добавление расписания в БД
         logging.info(f"New schedule added to database with ID: {new_schedule.id}")
         
@@ -200,6 +201,11 @@ def add_schedule():
 
         # Логируем успешное добавление задачи в планировщик
         logging.info(f"Scheduled job created for schedule ID: {new_schedule.id}")
+
+        execute_schedule(new_schedule.id)
+
+        # Логируем успешное выполнение задачи в планировщик
+        logging.info(f"Scheduled job executed for schedule ID: {new_schedule.id}")
 
         return jsonify({"msg": "Schedule created and task added successfully"}), 201
 
