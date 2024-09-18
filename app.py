@@ -124,22 +124,7 @@ def index():
         return redirect('/active_schedules')  # Перенаправляем авторизованных пользователей на активные расписания
     return render_template('login.html')
 
-"""# Маршрут для регистрации
-@app.route('/register', methods=['GET', 'POST'])
-def register():
-    if request.method == 'POST':
-        username = request.json.get('username', None)
-        password = request.json.get('password', None)
 
-        if not username or not password:
-            return jsonify({"msg": "Username and password are required"}), 400
-
-        if db.user_exists(username):
-            return jsonify({"msg": "Username already taken"}), 400
-
-        new_user = db.add_user(username, password)
-        db.session.add(new_user)
-        db.session.commit()"""
 
 # Маршрут для входа (авторизации)
 @app.route('/auth', methods=['POST'])

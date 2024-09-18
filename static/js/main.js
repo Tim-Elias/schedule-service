@@ -24,28 +24,7 @@ $(document).ready(function() {
             }
         });
     });
-    /*
-     // Обработчик для формы регистрации
-     $('#registerForm').on('submit', function(event) {
-        event.preventDefault();
-
-        let username = $('#username').val();
-        let password = $('#password').val();
-
-        $.ajax({
-            url: '/register',
-            type: 'POST',
-            contentType: 'application/json',
-            data: JSON.stringify({ username: username, password: password }),
-            success: function(response) {
-                $('#registerAlert').html('<div class="alert alert-success">Registration successful!</div>');
-            },
-            error: function() {
-                $('#registerAlert').html('<div class="alert alert-danger">Error during registration.</div>');
-            }
-        });
-    });
-    */
+   
     
 });
 
