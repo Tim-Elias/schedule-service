@@ -6,6 +6,7 @@ logging
 werkzeug
 os
 dotenv
-requests
 apscheduler
 datetime
+google-oauth2-tool
+Authlib
