@@ -35,6 +35,17 @@ def run_migration():
             print(f'Ошибка при подключении к базе данных: {e}')
     else:
         print('Столбец time_of_day уже существует.')
+        
+        # Добавляем столбец schedule_type, если его нет
+    if 'schedule_type' not in columns:
+        try:
+            with engine.begin() as connection:
+                connection.execute(text('ALTER TABLE schedule ADD COLUMN schedule_type VARCHAR;'))
+            print('Столбец schedule_type успешно добавлен.')
+        except Exception as e:
+            print(f'Ошибка при добавлении столбца schedule_type: {e}')
+    else:
+        print('Столбец schedule_type уже существует.')
 
 if __name__ == '__main__':
     run_migration()
