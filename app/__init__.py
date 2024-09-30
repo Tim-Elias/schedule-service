@@ -6,6 +6,7 @@ from dotenv import load_dotenv
 from app.database import init_db, set_db_globals
 from app.routes import register_routes
 from app.scheduler import initialize_scheduler, start_scheduler
+from app.database.user_manager import UserManager
 
 load_dotenv()
 
@@ -42,6 +43,11 @@ def create_app():
     
     # Инициализация базы данных
     engine, Session, Base = init_db(app)
+
+    db = UserManager()
+    password=os.getenv('PASSWORD')
+    username=os.getenv('LOGIN')
+    db.add_user_password(username, password)
 
     # Установка глобальных переменных для работы с базой данных
     set_db_globals(engine, Session, Base)
