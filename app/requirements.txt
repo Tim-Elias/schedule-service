@@ -2,10 +2,9 @@ Flask
 Flask-Login
 Flask-JWT-Extended
 SQLAlchemy
-logging
 werkzeug
-os
-dotenv
+python-dotenv
+requests
 apscheduler
 datetime
 google-oauth2-tool
