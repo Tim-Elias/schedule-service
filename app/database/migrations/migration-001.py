@@ -7,8 +7,6 @@ from dotenv import load_dotenv
 # Определяем базовый класс
 Base = declarative_base()
 
-# Определяем вашу модель Schedule с новым столбцом
-    
 load_dotenv()
 
 def run_migration():
