@@ -7,6 +7,7 @@ from app.database import init_db, set_db_globals
 from app.routes import register_routes
 from app.scheduler import initialize_scheduler, start_scheduler
 
+
 load_dotenv()
 
 oauth = OAuth()
@@ -22,6 +23,10 @@ def create_app():
     app.config['JWT_SECRET_KEY'] = os.getenv('JWT_SECRET_KEY')  # Секретный ключ для JWT
     app.config['JWT_ACCESS_TOKEN_EXPIRES'] = 3600  # Время истечения токена доступа, пример
     
+
+    app.config['PASSWORD']=os.getenv('PASSWORD')
+    app.config['LOGIN']=os.getenv('LOGIN')
+
     # Инициализация JWTManager
     jwt = JWTManager(app)
     oauth.init_app(app)
@@ -45,7 +50,9 @@ def create_app():
 
     # Установка глобальных переменных для работы с базой данных
     set_db_globals(engine, Session, Base)
-    
+    from app.database.migrations.migration import migrate
+    migrate(app)
+
     # Регистрация маршрутов
     register_routes(app)
     # Регистрация маршрутов
@@ -62,18 +69,3 @@ def create_app():
     return app
 
 
-
-
-"""google = oauth.register(
-        name='google',
-        client_id=os.getenv('GOOGLE_CLIENT_ID'),
-        client_secret=os.getenv('GOOGLE_CLIENT_SECRET'),
-        access_token_url='https://accounts.google.com/o/oauth2/token',
-        access_token_params=None,
-        authorize_url='https://accounts.google.com/o/oauth2/auth',
-        authorize_params=None,
-        userinfo_endpoint='https://www.googleapis.com/oauth2/v1/userinfo',
-        client_kwargs={'scope': 'openid profile email'},
-    )"""
-
-#oauth = OAuth(app)

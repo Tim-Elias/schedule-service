@@ -3,6 +3,7 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy.orm import declarative_base
 import os
 from dotenv import load_dotenv
+from app.database.db_globals import engine
 
 # Определяем базовый класс
 Base = declarative_base()
@@ -11,8 +12,7 @@ load_dotenv()
 
 def run_migration():
     # Подключение к базе данных
-    DATABASE_URL = os.getenv('DATABASE_URL')
-    engine = create_engine(DATABASE_URL, echo=True)
+    #engine = create_engine(DATABASE_URL, echo=True)
 
     inspector = inspect(engine)
     columns = [col['name'] for col in inspector.get_columns('schedule')]
@@ -47,5 +47,5 @@ def run_migration():
     else:
         print('Столбец schedule_type уже существует.')
 
-if __name__ == '__main__':
-    run_migration()
+#if __name__ == '__main__':
+ #   run_migration()
