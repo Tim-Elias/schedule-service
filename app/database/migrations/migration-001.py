@@ -1,6 +1,7 @@
 from sqlalchemy import create_engine, Column, Time
 from sqlalchemy.orm import sessionmaker
-from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import declarative_base
+from sqlalchemy import text
 import os
 from dotenv import load_dotenv
 
@@ -23,7 +24,7 @@ def run_migration():
     if 'time_of_day' not in columns:
         # Выполняем SQL-команду для добавления столбца
         try:
-            connection.execute('ALTER TABLE schedule ADD COLUMN time_of_day TIME;')
+            connection.execute(text('ALTER TABLE schedule ADD COLUMN time_of_day TIME;'))
             print('Столбец time_of_day успешно добавлен.')
         except Exception as e:
             print(f'Ошибка при добавлении столбца: {e}')
