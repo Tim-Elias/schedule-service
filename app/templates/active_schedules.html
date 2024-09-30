@@ -4,7 +4,11 @@
 <!-- Подключение JavaScript файла -->
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="/static/js/active_schedules.js"></script>
+<script src="/static/js/logout.js"></script>
+
 <h2>Protected Content</h2>
+<!-- Вставьте этот код в нужное место вашего HTML-документа -->
+<button id="logoutButton">Log Out</button>
 
 <!-- Ссылка на страницу всех расписаний -->
 <a href="/all_schedules" class="btn btn-primary">View All Schedules</a>
@@ -23,26 +27,45 @@
         <label for="url" class="form-label">URL</label>
         <input type="text" class="form-control" id="url" required>
     </div>
+    
+    <!-- Новый блок для выбора типа расписания -->
     <div class="mb-3">
+        <label for="schedule_type" class="form-label">Schedule Type</label>
+        <select class="form-select" id="schedule_type" required>
+            <option value="interval">Interval</option>
+            <option value="daily">Daily</option>
+        </select>
+    </div>
+    
+    <!-- Поле для интервала (в минутах) -->
+    <div class="mb-3" id="intervalDiv">
         <label for="interval" class="form-label">Interval (minutes)</label>
         <input type="number" class="form-control" id="interval" required>
     </div>
+    
+    <!-- Поле для времени выполнения ежедневного расписания -->
+    <div class="mb-3" id="timeOfDayDiv" style="display: none;">
+        <label for="time_of_day" class="form-label">Time of Day (HH:MM)</label>
+        <input type="time" class="form-control" id="time_of_day">
+    </div>
+
     <div class="mb-3" id="postDataDiv" style="display: none;">
         <label for="data" class="form-label">POST Data</label>
         <textarea class="form-control" id="data"></textarea>
     </div>
+
     <button type="submit" class="btn btn-primary">Add Schedule</button>
 </form>
 
-<!-- Список существующих расписаний -->
-<h3 class="mt-5">Existing Schedules</h3>
+<!-- Список активных расписаний -->
+<h3 class="mt-5">Active Schedules</h3>
 <table class="table table-striped">
     <thead>
         <tr>
             <th>ID</th>
             <th>Method</th>
             <th>URL</th>
-            <th>Interval (min)</th>
+            <th>Schedule Type</th>
             <th>Last Run</th>
             <th>Actions</th>
         </tr>
@@ -70,6 +93,4 @@
     </tbody>
 </table>
 
-
 {% endblock %}
-

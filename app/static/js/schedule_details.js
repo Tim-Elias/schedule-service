@@ -26,7 +26,16 @@ function loadScheduleDetails(id) {
             $('#scheduleId').text(response.schedule.id);
             $('#scheduleMethod').text(response.schedule.method);
             $('#scheduleUrl').text(response.schedule.url);
-            $('#scheduleInterval').text(response.schedule.interval);
+
+            // Отображение расписания в зависимости от его типа (интервал или ежедневное время)
+            if (response.schedule.schedule_type === 'interval') {
+                $('#scheduleInterval').text(response.schedule.interval + ' minutes');
+                $('#scheduleDailyTime').hide(); // Скрываем время запуска, если это интервал
+            } else if (response.schedule.schedule_type === 'daily') {
+                $('#scheduleInterval').hide();  // Скрываем интервал, если это ежедневное расписание
+                $('#scheduleDailyTime').text(response.schedule.time_of_day);
+            }
+
             $('#scheduleLastRun').text(response.schedule.last_run || 'Never');
             $('#scheduleStatus').text(response.schedule.is_active ? 'Active' : 'Inactive');
         },
@@ -53,6 +62,7 @@ function loadLogs(scheduleId) {
                 response.logs.forEach(log => {
                     logList.prepend(`
                         <tr>
+                            <td>${log.schedule_id}</td>
                             <td>${log.response}</td>
                             <td>${log.timestamp}</td>
                         </tr>

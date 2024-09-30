@@ -1,6 +1,9 @@
 {% extends "base.html" %}
 
 {% block content %}
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="/static/js/main.js"></script>
+<script src="https://apis.google.com/js/platform.js" async defer></script>
 <h2>Login</h2>
 <form id="loginForm">
     <div class="mb-3">
@@ -13,5 +16,9 @@
     </div>
     <button type="submit" class="btn btn-primary">Login</button>
 </form>
+
+<!-- Кнопка для авторизации через Google -->
+<button id="googleLogin" class="btn btn-danger mt-3">Login with Google</button>
+
 <div id="loginAlert" class="mt-3"></div>
 {% endblock %}
