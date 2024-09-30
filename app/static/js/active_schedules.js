@@ -48,14 +48,12 @@ $(document).ready(function() {
     // Обработка отправки формы
     $('#scheduleForm').on('submit', function(event) {
         event.preventDefault();
-
         let method = $('#method').val();
         let url = $('#url').val();
         let scheduleType = $('#schedule_type').val();
         let interval = scheduleType === 'interval' ? $('#interval').val() : null;
         let timeOfDay = scheduleType === 'daily' ? $('#time_of_day').val() : null;
         let data = $('#data').val();
-
         $.ajax({
             url: '/schedule',
             type: 'POST',
@@ -90,6 +88,17 @@ $(document).ready(function() {
         // loadSchedulesActive();
         loadLogsActive();
     }, 30000);  // 30000 миллисекунд = 30 секунд
+    
+    // Обработчик для кнопки выхода
+    $('#logoutButton').on('click', function() {
+        // Удаляем токен из localStorage
+        localStorage.removeItem('jwt_token');
+        
+        // Можно очистить токен из сессии на сервере, если требуется (дополнительно)
+
+        // Перенаправляем пользователя на страницу входа
+        window.location.href = '/login';
+    });
 });
 
 // Загрузка активных расписаний

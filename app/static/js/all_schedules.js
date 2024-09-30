@@ -1,6 +1,26 @@
 $(document).ready(function() {
+    // Проверка наличия токена в localStorage
+    const token = localStorage.getItem('jwt_token');
+
+    if (!token) {
+        window.location.href = '/';
+    } else {
+        $.ajax({
+            url: '/all_schedules',
+            type: 'GET',
+            headers: {
+                'Authorization': 'Bearer ' + token
+            },
+            success: function(response) {
+                loadAllSchedules();
+            },
+            error: function(xhr, status, error) {
+                window.location.href = '/';
+            }
+        });
+    }
     // Загрузка всех расписаний
-    loadAllSchedules();
+    //loadAllSchedules();
 
     // Автоматическое обновление данных каждые 30 секунд
     setInterval(function() {
