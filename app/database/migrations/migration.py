@@ -1,6 +1,6 @@
-from app.database.migrations.password import admin
-from app.database.migrations.migration_schedule import run_migration_schedule
-from app.database.migrations.migration_users import run_migration_users
+from password import admin
+from migration_schedule import run_migration_schedule
+from migration_users import run_migration_users
 
 
 def migrate(app):
