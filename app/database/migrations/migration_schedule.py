@@ -1,7 +1,5 @@
-from sqlalchemy import create_engine, Column, Time, inspect, text
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy import inspect, text
 from sqlalchemy.orm import declarative_base
-import os
 from dotenv import load_dotenv
 from app.database.db_globals import engine
 
@@ -10,7 +8,7 @@ Base = declarative_base()
 
 load_dotenv()
 
-def run_migration():
+def run_migration_schedule():
     # Подключение к базе данных
     #engine = create_engine(DATABASE_URL, echo=True)
 
@@ -46,6 +44,7 @@ def run_migration():
             print(f'Ошибка при добавлении столбца schedule_type: {e}')
     else:
         print('Столбец schedule_type уже существует.')
+        
 
 #if __name__ == '__main__':
  #   run_migration()
