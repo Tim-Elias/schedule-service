@@ -1,5 +1,6 @@
 from app.models import RequestLog  
 from app.database.db_globals import Session
+from math import ceil
 
 
 class RequestLogManager:
@@ -38,3 +39,36 @@ class RequestLogManager:
         logs = session.query(RequestLog).all()
         session.close()
         return logs
+    
+    def get_logs_by_schedule_paginated(self, schedule_id, page=1, per_page=10):
+        """Получить логи по schedule_id с поддержкой пагинации"""
+        session = self.Session()
+        try:
+            query = session.query(RequestLog).filter_by(schedule_id=schedule_id)
+            total_logs = query.count()  # Общее количество логов для данного расписания
+            logs = query.order_by(RequestLog.timestamp.desc()) \
+                         .limit(per_page) \
+                         .offset((page - 1) * per_page) \
+                         .all()
+            return logs, total_logs
+        finally:
+            session.close()
+
+    def get_active_logs_paginated(self, active_schedule_ids, page=1, per_page=10):
+        """
+        Получить логи для активных расписаний с пагинацией
+        :param active_schedule_ids: список ID активных расписаний
+        :param page: номер страницы
+        :param per_page: количество элементов на странице
+        """
+        session = self.Session()
+        try:
+            query = session.query(RequestLog).filter(RequestLog.schedule_id.in_(active_schedule_ids))
+            total_logs = query.count()  # Подсчитываем общее количество логов
+            logs = query.order_by(RequestLog.timestamp.desc()) \
+                         .limit(per_page) \
+                         .offset((page - 1) * per_page) \
+                         .all()
+            return logs, total_logs
+        finally:
+            session.close()

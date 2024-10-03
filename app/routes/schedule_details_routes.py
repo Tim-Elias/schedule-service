@@ -13,16 +13,26 @@ def schedule_details():
     from app.database.schedule_manager import ScheduleManager
     db_s = ScheduleManager()
     from app.database.request_log_manager import RequestLogManager
-    db_l=RequestLogManager()
-    token = request.args.get("jwt_token")
-    if not token:
-        return redirect('/login')
+    db_l = RequestLogManager()
+    
+    # Параметры пагинации
+    page = request.args.get('page', default=1, type=int)
+    per_page = request.args.get('per_page', default=10, type=int)
+    
     schedule_id = request.args.get('id', type=int)
     if not schedule_id:
         return redirect(url_for('get_all_schedules'))
+    
     schedule = db_s.get_schedule_by_id(schedule_id)
-    logs = db_l.get_logs_by_schedule(schedule_id)
-    return render_template('schedule_details.html', schedule=schedule, logs=logs)
+    logs, total_logs = db_l.get_logs_by_schedule_paginated(schedule_id, page=page, per_page=per_page)
+    
+    return render_template('schedule_details.html', 
+                           schedule=schedule, 
+                           logs=logs,  # Список логов на текущей странице
+                           page=page, 
+                           per_page=per_page, 
+                           total_logs=total_logs)  # Общее количество логов для пагинации
+
 
 
 # Пример функции обновления расписания

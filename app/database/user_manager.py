@@ -67,3 +67,26 @@ class UserManager:
 
         # Возвращаем найденное расписание или None, если не найдено
         return user
+    
+    def delete_user_by_username(self, username):
+        """Удалить пользователя с заданным user_id"""
+        session=self.Session()
+        try:
+            # Находим пользователя по user_id
+            user = session.query(User).filter_by(user_id=username).first()
+
+            if user:
+                # Если пользователь найден, удаляем его
+                session.delete(user)
+                session.commit()
+                return True  # Возвращаем True, если пользователь был успешно удален
+            else:
+                return False  # Возвращаем False, если пользователь не найден
+
+        except Exception as e:
+            session.rollback()  # Откатываем изменения, если что-то пошло не так
+            print(f"Ошибка при удалении пользователя: {e}")
+            return False  # Возвращаем False при ошибке
+
+        finally:
+            session.close()  # Закрываем сессию

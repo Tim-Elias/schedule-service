@@ -140,16 +140,19 @@ function loadSchedulesActive() {
 }
 
 
-
-// Загрузка логов
-function loadLogsActive(scheduleId = null) {
+// Загрузка активных логов с поддержкой пагинации
+function loadLogsActive(page = 1, perPage = 10) {
     $.ajax({
-        url: scheduleId ? `/logs/${scheduleId}` : '/logs/active',
+        url: '/logs/active',
         type: 'GET',
         headers: {
             'Authorization': 'Bearer ' + localStorage.getItem('jwt_token')
         },
-        data: { _: new Date().getTime() },
+        data: { 
+            page: page, 
+            per_page: perPage, 
+            _: new Date().getTime()  // Для предотвращения кэширования
+        },
         success: function(response) {
             let logList = $('#logList');
             logList.empty();
@@ -162,6 +165,9 @@ function loadLogsActive(scheduleId = null) {
                     </tr>
                 `);
             });
+
+            // Обновляем навигацию по страницам
+            updatePagination(response.page, response.per_page, response.total_logs);
         },
         error: function(xhr, status, error) {
             console.error('Error loading logs:', status, error);
@@ -185,4 +191,17 @@ function deactivateScheduleActive(id) {
             console.error('Error deactivating schedule:', status, error);
         }
     });
+}
+
+// Функция обновления навигации по страницам
+function updatePagination(currentPage, perPage, totalLogs) {
+    let totalPages = Math.ceil(totalLogs / perPage);
+    let paginationContainer = $('#pagination');
+    paginationContainer.empty();
+
+    for (let page = 1; page <= totalPages; page++) {
+        paginationContainer.append(`
+            <button onclick="loadLogsActive(${page}, ${perPage})">${page}</button>
+        `);
+    }
 }
