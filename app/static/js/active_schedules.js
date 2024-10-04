@@ -123,7 +123,9 @@ function loadSchedulesActive() {
             ? `Interval (${schedule.interval} min)`
             : `Daily at ${schedule.time_of_day}`;
 
-        //let lastRun = schedule.last_run ? new Date(schedule.last_run).toLocaleString() : 'Never';
+        let lastRun = schedule.last_run
+          ? new Date(schedule.last_run).toLocaleString()
+          : "Never";
 
         // Добавление строки в таблицу
         scheduleList.append(`
