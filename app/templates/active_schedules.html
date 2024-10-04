@@ -60,7 +60,7 @@
 
 <!-- Список активных расписаний -->
 <h3 class="mt-5">Active Schedules</h3>
-<div class="table-responsive">
+<div class="d-none d-md-block table-responsive">
   <table class="table table-striped">
     <thead>
       <tr>
@@ -76,6 +76,11 @@
       <!-- Расписания будут загружены через JS -->
     </tbody>
   </table>
+</div>
+
+<!-- Список активных расписаний для мобильных устройств (карточки) -->
+<div class="d-block d-md-none" id="scheduleListCards">
+  <!-- Карточки будут загружены через JS -->
 </div>
 
 <!-- Кнопка для загрузки логов активных расписаний -->
