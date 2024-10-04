@@ -148,11 +148,19 @@ function loadSchedulesActive() {
             <div class="card schedule-card">
                 <div class="card-body">
                     <h5 class="card-title">Schedule ID: ${schedule.id}</h5>
-                    <p class="card-text"><strong>Method:</strong> ${schedule.method}</p>
-                    <p class="card-text"><strong>URL:</strong> ${schedule.url}</p>
+                    <p class="card-text"><strong>Method:</strong> ${
+                      schedule.method
+                    }</p>
+                    <p class="card-text"><strong>URL:</strong> ${
+                      schedule.url
+                    }</p>
                     <p class="card-text"><strong>Schedule Type:</strong> ${scheduleType}</p>
-                    <p class="card-text"><strong>Last Run:</strong> ${lastRun}</p>
-                    <button class="btn btn-danger btn-sm" onclick="deactivateScheduleActive(${schedule.id})">Deactivate</button>
+                    <p class="card-text"><strong>Last Run:</strong> ${
+                      lastRun || "Never"
+                    }</p>
+                    <button class="btn btn-danger btn-sm" onclick="deactivateScheduleActive(${
+                      schedule.id
+                    })">Deactivate</button>
                 </div>
             </div>
         `);
