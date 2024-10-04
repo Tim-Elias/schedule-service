@@ -111,11 +111,9 @@ function loadSchedulesActive() {
     },
     data: { _: new Date().getTime() },
     success: function (response) {
-      // Заполнение таблицы
       let scheduleList = $("#scheduleList");
       scheduleList.empty();
 
-      // Заполнение карточек
       let scheduleListCards = $("#scheduleListCards");
       scheduleListCards.empty();
 
@@ -125,37 +123,35 @@ function loadSchedulesActive() {
             ? `Interval (${schedule.interval} min)`
             : `Daily at ${schedule.time_of_day}`;
 
-        let lastRun = schedule.last_run
-          ? new Date(schedule.last_run).toLocaleString()
-          : "Never";
+        //let lastRun = schedule.last_run ? new Date(schedule.last_run).toLocaleString() : 'Never';
 
         // Добавление строки в таблицу
         scheduleList.append(`
-                    <tr>
-                        <td>${schedule.id}</td>
-                        <td>${schedule.method}</td>
-                        <td>${schedule.url}</td>
-                        <td>${scheduleType}</td>
-                        <td>${lastRun}</td>
-                        <td>
-                            <button class="btn btn-danger btn-sm" onclick="deactivateScheduleActive(${schedule.id})">Deactivate</button>
-                        </td>
-                    </tr>
-                `);
+            <tr>
+                <td>${schedule.id}</td>
+                <td>${schedule.method}</td>
+                <td>${schedule.url}</td>
+                <td>${scheduleType}</td>
+                <td>${lastRun}</td>
+                <td>
+                    <button class="btn btn-danger btn-sm" onclick="deactivateScheduleActive(${schedule.id})">Deactivate</button>
+                </td>
+            </tr>
+        `);
 
         // Добавление карточки
         scheduleListCards.append(`
-                    <div class="card schedule-card">
-                        <div class="card-body">
-                            <h5 class="card-title">Schedule ID: ${schedule.id}</h5>
-                            <p class="card-text"><strong>Method:</strong> ${schedule.method}</p>
-                            <p class="card-text"><strong>URL:</strong> ${schedule.url}</p>
-                            <p class="card-text"><strong>Schedule Type:</strong> ${scheduleType}</p>
-                            <p class="card-text"><strong>Last Run:</strong> ${lastRun}</p>
-                            <button class="btn btn-danger btn-sm" onclick="deactivateScheduleActive(${schedule.id})">Deactivate</button>
-                        </div>
-                    </div>
-                `);
+            <div class="card schedule-card">
+                <div class="card-body">
+                    <h5 class="card-title">Schedule ID: ${schedule.id}</h5>
+                    <p class="card-text"><strong>Method:</strong> ${schedule.method}</p>
+                    <p class="card-text"><strong>URL:</strong> ${schedule.url}</p>
+                    <p class="card-text"><strong>Schedule Type:</strong> ${scheduleType}</p>
+                    <p class="card-text"><strong>Last Run:</strong> ${lastRun}</p>
+                    <button class="btn btn-danger btn-sm" onclick="deactivateScheduleActive(${schedule.id})">Deactivate</button>
+                </div>
+            </div>
+        `);
       });
     },
     error: function (xhr, status, error) {
