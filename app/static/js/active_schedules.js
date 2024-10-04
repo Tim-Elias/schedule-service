@@ -123,9 +123,9 @@ function loadSchedulesActive() {
             ? `Interval (${schedule.interval} min)`
             : `Daily at ${schedule.time_of_day}`;
 
-        let lastRun = schedule.last_run
-          ? new Date(schedule.last_run).toLocaleString()
-          : "Never";
+        // let lastRun = schedule.last_run
+        //   ? new Date(schedule.last_run).toLocaleString()
+        //   : "Never";
 
         // Добавление строки в таблицу
         scheduleList.append(`
@@ -134,9 +134,11 @@ function loadSchedulesActive() {
                 <td>${schedule.method}</td>
                 <td>${schedule.url}</td>
                 <td>${scheduleType}</td>
-                <td>${lastRun}</td>
+                <td>${schedule.last_run || "Never"}</td>
                 <td>
-                    <button class="btn btn-danger btn-sm" onclick="deactivateScheduleActive(${schedule.id})">Deactivate</button>
+                    <button class="btn btn-danger btn-sm" onclick="deactivateScheduleActive(${
+                      schedule.id
+                    })">Deactivate</button>
                 </td>
             </tr>
         `);
