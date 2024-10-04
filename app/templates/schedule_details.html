@@ -1,57 +1,63 @@
-{% extends "base.html" %}
-
-{% block content %}
+{% extends "base.html" %} {% block content %}
 <!-- Подключение JavaScript файла -->
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="/static/js/schedule_details.js"></script>
 
 <h2>Schedule Details</h2>
 <!-- Кнопка для возврата на страницу всех расписаний -->
-<a href="/all_schedules" class="btn btn-secondary mb-3">Back to All Schedules</a>
+<a href="/all_schedules" class="btn btn-secondary mb-3"
+  >Back to All Schedules</a
+>
 
 <!-- Расположение деталей расписания -->
 <div class="card mb-3">
-    <div class="card-header">
-        <h3>Schedule ID: {{ schedule.id }}</h3>
-    </div>
-    <div class="card-body">
-        <p><strong>Method:</strong> {{ schedule.method }}</p>
-        <p><strong>URL:</strong> {{ schedule.url }}</p>
+  <div class="card-header">
+    <h3>Schedule ID: {{ schedule.id }}</h3>
+  </div>
+  <div class="card-body">
+    <p><strong>Method:</strong> {{ schedule.method }}</p>
+    <p><strong>URL:</strong> {{ schedule.url }}</p>
 
-       <!-- Отображение для расписания по интервалу -->
-        {% if schedule.schedule_type == 'interval' %}
-        <p id="scheduleInterval"><strong>Interval:</strong> {{ schedule.interval }} minutes</p>
-        {% endif %}
+    <!-- Отображение для расписания по интервалу -->
+    {% if schedule.schedule_type == 'interval' %}
+    <p id="scheduleInterval">
+      <strong>Interval:</strong> {{ schedule.interval }} minutes
+    </p>
+    {% endif %}
 
-        <!-- Отображение для расписания по времени (каждый день) -->
-        {% if schedule.schedule_type == 'daily' %}
-        <p id="scheduleDailyTime"><strong>Time of day:</strong> {{ schedule.time_of_day }}</p>
-        {% endif %}
+    <!-- Отображение для расписания по времени (каждый день) -->
+    {% if schedule.schedule_type == 'daily' %}
+    <p id="scheduleDailyTime">
+      <strong>Time of day:</strong> {{ schedule.time_of_day }}
+    </p>
+    {% endif %}
 
-        <p><strong>Last Run:</strong> {{ schedule.last_run or 'Never' }}</p>
-        <p><strong>Status:</strong> {{ 'Active' if schedule.is_active else 'Inactive' }}</p>
-    </div>
+    <p><strong>Last Run:</strong> {{ schedule.last_run or 'Never' }}</p>
+    <p>
+      <strong>Status:</strong> {{ 'Active' if schedule.is_active else 'Inactive'
+      }}
+    </p>
+  </div>
 </div>
 
 <!-- Логи -->
 <h3 class="mt-5">Request Logs</h3>
 <table class="table table-striped">
-    <thead>
-        <tr>
-            <th>Schedule ID</th>
-            <th>Response</th>
-            <th>Timestamp</th>
-        </tr>
-    </thead>
-    <tbody id="logList">
-        {% for log in logs %}
-        <tr>
-            <td>{{ log.schedule_id }}</td>
-            <td>{{ log.response }}</td>
-            <td>{{ log.timestamp }}</td>
-        </tr>
-        {% endfor %}
-    </tbody>
+  <thead>
+    <tr>
+      <th>Schedule ID</th>
+      <th>Response</th>
+      <th>Timestamp</th>
+    </tr>
+  </thead>
+  <tbody id="logList">
+    {% for log in logs %}
+    <tr>
+      <td>{{ log.schedule_id }}</td>
+      <td>{{ log.response }}</td>
+      <td>{{ log.timestamp }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
 </table>
 
 <div id="pagination"></div>

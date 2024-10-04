@@ -1,20 +1,18 @@
-{% extends "base.html" %}
+{% extends "base.html" %} {% block content %}
 
-{% block content %}
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="/static/js/main.js"></script>
 <script src="https://apis.google.com/js/platform.js" async defer></script>
 <h2>Login</h2>
 <form id="loginForm">
-    <div class="mb-3">
-        <label for="username" class="form-label">Username</label>
-        <input type="text" class="form-control" id="username" required>
-    </div>
-    <div class="mb-3">
-        <label for="password" class="form-label">Password</label>
-        <input type="password" class="form-control" id="password" required>
-    </div>
-    <button type="submit" class="btn btn-primary">Login</button>
+  <div class="mb-3">
+    <label for="username" class="form-label">Username</label>
+    <input type="text" class="form-control" id="username" required />
+  </div>
+  <div class="mb-3">
+    <label for="password" class="form-label">Password</label>
+    <input type="password" class="form-control" id="password" required />
+  </div>
+  <button type="submit" class="btn btn-primary">Login</button>
 </form>
 
 <!-- Кнопка для авторизации через Google -->
