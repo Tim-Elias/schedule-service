@@ -156,7 +156,7 @@ function loadSchedulesActive() {
                     }</p>
                     <p class="card-text"><strong>Schedule Type:</strong> ${scheduleType}</p>
                     <p class="card-text"><strong>Last Run:</strong> ${
-                      lastRun || "Never"
+                      schedule.lastRun || "Never"
                     }</p>
                     <button class="btn btn-danger btn-sm" onclick="deactivateScheduleActive(${
                       schedule.id
