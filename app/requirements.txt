@@ -9,3 +9,4 @@ apscheduler
 datetime
 google-oauth2-tool
 Authlib
+alembic

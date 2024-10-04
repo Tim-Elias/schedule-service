@@ -45,6 +45,3 @@ def run_migration_schedule():
     else:
         print('Столбец schedule_type уже существует.')
         
-
-#if __name__ == '__main__':
- #   run_migration()
