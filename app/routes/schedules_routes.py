@@ -39,7 +39,7 @@ get_schedule_model = schedules_ns.model('GetSchedules', {
 
 @schedules_ns.route('/')
 class AllSchedulesResource(Resource):
-    @jwt_required()
+    @jwt_required(optional=True)
     @schedules_ns.expect(get_schedule_model)
     @schedules_ns.marshal_list_with(schedule_response_model)
     def get(self):
