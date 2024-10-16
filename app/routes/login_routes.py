@@ -26,7 +26,7 @@ response_auth = login_ns.model('Tokens', {
 @login_ns.route('/')
 class Auth(Resource):
     @login_ns.expect(login_model)
-    @login_ns.marshal_with(response_auth)
+    # @login_ns.marshal_with(response_auth)
     @cross_origin()
     def post(self):
         from app.database.user_manager import UserManager
@@ -44,6 +44,9 @@ class Auth(Resource):
         # Генерируем Access и Refresh токены
         access_token = create_access_token(identity=username)
         refresh_token = create_refresh_token(identity=username)
+
+        print(f"Generated access_token: {access_token}")
+        print(f"Generated refresh_token: {refresh_token}")
 
         return {
             "access_token": access_token,
