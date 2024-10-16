@@ -71,6 +71,10 @@ def create_app():
         if any(request.path.startswith(route) for route in open_routes):
             return  # No need to verify JWT
 
+        # Skip authentication for OPTIONS requests (CORS preflight requests)
+        if request.method == 'OPTIONS':
+            return  # No need to verify JWT for preflight requests
+
         try:
             # Verify JWT token in the request
             verify_jwt_in_request()
