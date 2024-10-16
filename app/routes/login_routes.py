@@ -34,6 +34,10 @@ class Auth(Resource):
         username = request.json.get("username", None)
         password = request.json.get("password", None)
 
+        print(username)
+        print(password)
+        
+
         if not db.user_exists(username) or not db.check_password(username, password):
             return {"msg": "Bad username or password"}, 401
 
