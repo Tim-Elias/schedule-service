@@ -19,8 +19,8 @@ refresh_model = login_ns.model('RefreshToken', {
 })
 
 response_auth = login_ns.model('Tokens', {
-    'access_token': fields.String(required=True, description='Access token for user'),
-    'refresh_token': fields.String(required=True, description='Refresh token for user')
+    'access_token': fields.Raw(required=True, description='Access token for user'),
+    'refresh_token': fields.Raw(required=True, description='Refresh token for user')
 })
 
 @login_ns.route('/')
