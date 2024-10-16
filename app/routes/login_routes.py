@@ -27,7 +27,6 @@ response_auth = login_ns.model('Tokens', {
 class Auth(Resource):
     @cross_origin()
     @login_ns.expect(login_model)
-    @login_ns.marshal_with(response_auth)
     def post(self):
         from app.database.user_manager import UserManager
         db = UserManager()
@@ -65,7 +64,6 @@ class Auth(Resource):
 class Auth(Resource):
     @cross_origin()
     @login_ns.expect(refresh_model)  # Использование модели для валидации запроса
-    @login_ns.marshal_with(response_auth)
     def post(self):
         # Получение токена из тела запроса
         refresh_token = request.json.get('refresh_token', None)
