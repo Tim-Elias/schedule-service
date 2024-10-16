@@ -1,70 +1,34 @@
-from flask import Blueprint
+from flask import request
+from flask_restx import Namespace, Resource, fields
 from flask_jwt_extended import jwt_required
-from flask import render_template, jsonify, request, redirect, url_for
+from app.validators import validate_uuid, validate_uuid_param
+
+schedule_details_ns = Namespace('schedule', description='Schedule Details operations')
+
+# Определение модели для расписания
+schedule_detail_model = schedule_details_ns.model('ScheduleDetail', {
+    'id': fields.String(required=True, description='Schedule ID', validate=validate_uuid),
+    'method': fields.String(required=True, description='HTTP Method'),
+    'url': fields.String(required=True, description='URL for the schedule'),
+    'schedule_type': fields.String(required=True, description='Type of schedule'),
+    'data': fields.Raw(description='Data for POST requests'),
+    'last_run': fields.String(description='Last Run Time'),
+    'is_active': fields.Boolean(required=True, description='Is Schedule Active'),
+    'interval': fields.Integer(description='Interval in minutes for interval schedule'),
+    'time_of_day': fields.String(description='Time of day for daily schedule (HH:MM)')
+})
+
+@schedule_details_ns.route('/<string:schedule_id>/view')
+class ScheduleDetailResource(Resource):
+    @jwt_required()
+    @schedule_details_ns.marshal_with(schedule_detail_model)
+    @validate_uuid_param  # Используем декоратор для проверки валидности schedule_i
+    def get(self, schedule_id):
+        from app.database.schedule_manager import ScheduleManager
+        db = ScheduleManager()
+        schedule = db.get_schedule_by_id(schedule_id)
+        if schedule:
+            return schedule, 200
+        return {'msg': 'Schedule not found'}, 404
 
 
-schedule_details_bp = Blueprint('schedule_details', __name__)
-
-
-
-# Маршрут деталей о расписании
-@schedule_details_bp.route('/schedule_details', methods=['GET'])
-def schedule_details():
-    from app.database.schedule_manager import ScheduleManager
-    db_s = ScheduleManager()
-    from app.database.request_log_manager import RequestLogManager
-    db_l = RequestLogManager()
-    
-    # Параметры пагинации
-    page = request.args.get('page', default=1, type=int)
-    per_page = request.args.get('per_page', default=10, type=int)
-    
-    schedule_id = request.args.get('id', type=int)
-    if not schedule_id:
-        return redirect(url_for('get_all_schedules'))
-    
-    schedule = db_s.get_schedule_by_id(schedule_id)
-    logs, total_logs = db_l.get_logs_by_schedule_paginated(schedule_id, page=page, per_page=per_page)
-    
-    return render_template('schedule_details.html', 
-                           schedule=schedule, 
-                           logs=logs,  # Список логов на текущей странице
-                           page=page, 
-                           per_page=per_page, 
-                           total_logs=total_logs)  # Общее количество логов для пагинации
-
-
-
-# Пример функции обновления расписания
-@schedule_details_bp.route('/schedule/<int:schedule_id>', methods=['PUT'])
-@jwt_required()
-def update_schedule(schedule_id):
-    data = request.json
-    from app.database.schedule_manager import ScheduleManager
-    db_s = ScheduleManager()
-    # Логика поиска расписания в базе данных
-    schedule = db_s.get_schedule_by_id(schedule_id)
-    
-    if schedule is None:
-        return jsonify({'error': 'Schedule not found'}), 404
-    
-    # Обновляем поля расписания
-    schedule.method = data['method']
-    schedule.url = data['url']
-    
-    if data.get('schedule_type') == 'interval':
-        schedule.schedule_type = 'interval'
-        schedule.interval = data['interval']
-        schedule.time_of_day = None  # Убираем время, если было
-    
-    elif data.get('schedule_type') == 'daily':
-        schedule.schedule_type = 'daily'
-        schedule.time_of_day = data['time_of_day']
-        schedule.interval = None  # Убираем интервал, если был
-
-    schedule.data = data.get('data')
-    
-    # Сохраняем обновленное расписание
-    db_s.update_schedule(schedule)
-    
-    return jsonify({'message': 'Schedule updated successfully'}), 200

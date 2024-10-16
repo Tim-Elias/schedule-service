@@ -1,5 +1,6 @@
 from sqlalchemy import exists
 from app.models.user import User  
+import uuid
 from app.database.db_globals import Session
 
 class UserManager:
@@ -9,7 +10,8 @@ class UserManager:
     def add_user_password(self, username, password, auth_type='password'):
         """Добавляем пользователя стандартно"""
         session = self.Session()
-        new_user = User(user_id=username, auth_type=auth_type)
+        id = str(uuid.uuid4())
+        new_user = User(id=id, user_id=username, auth_type=auth_type)
         new_user.set_password(password)  # Устанавливаем хэш пароля
         session.add(new_user)
         session.commit()

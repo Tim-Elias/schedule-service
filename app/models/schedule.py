@@ -1,12 +1,13 @@
 from sqlalchemy import Column, Integer, String, Text, Time, DateTime, Boolean
 from sqlalchemy.orm import relationship
 from app.database.db_setup import Base 
+import json
 
 
 class Schedule(Base):
     __tablename__ = 'schedule'
     
-    id = Column(Integer, primary_key=True, autoincrement=True)
+    id = Column(String(36), primary_key=True, autoincrement=False)
     method = Column(String(10), nullable=False)
     url = Column(String(255), nullable=False)
     data = Column(Text, nullable=True)
@@ -20,3 +21,24 @@ class Schedule(Base):
 
     def __repr__(self):
         return f'<Schedule {self.id} {self.method} {self.url} {self.schedule_type}>'
+    
+    def to_dict(self):
+        schedule_dict = {
+            "id": self.id,
+            "method": self.method,
+            "url": self.url,
+            "data": json.loads(self.data) if self.data else {},  # Защита от ошибок при отсутствии данных
+            "schedule_type": self.schedule_type,
+            "last_run": self.last_run,
+            "is_active": self.is_active
+        }
+
+        if self.schedule_type == 'interval':
+            schedule_dict['interval'] = self.interval
+        elif self.schedule_type == 'daily':
+            if self.time_of_day:
+                schedule_dict['time_of_day'] = self.time_of_day.strftime('%H:%M:%S')  # Преобразуем объект Time в строку
+            else:
+                schedule_dict['time_of_day'] = None  # Убедитесь, что None обработан правильно
+
+        return schedule_dict

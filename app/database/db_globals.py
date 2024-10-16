@@ -7,7 +7,3 @@ def set_db_globals(engine_instance, session_instance, base_instance):
     engine = engine_instance
     Session = session_instance
     Base = base_instance
-    if Session is None:
-        print("Session is None!")
-    else:
-        print("Session initialized successfully!")

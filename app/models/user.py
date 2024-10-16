@@ -6,7 +6,7 @@ from app.database.db_setup import Base
 class User(Base):
     __tablename__ = 'users'
 
-    id = Column(Integer, primary_key=True, autoincrement=True)
+    id = Column(String(36), primary_key=True, autoincrement=False)
     user_id = Column(String, unique=True, nullable=False)  # Email или другой уникальный идентификатор
     password_hash = Column(String, nullable=True)  # Может быть NULL для OAuth-пользователей
     google_id = Column(String, unique=True, nullable=True)  # Google ID для OAuth пользователей

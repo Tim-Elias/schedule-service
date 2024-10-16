@@ -10,3 +10,4 @@ datetime
 google-oauth2-tool
 Authlib
 alembic
+flask-restx

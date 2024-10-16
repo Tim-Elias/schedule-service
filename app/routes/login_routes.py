@@ -1,43 +1,72 @@
-from flask import Blueprint
-from flask_jwt_extended import create_access_token
-from flask import render_template, jsonify, request, session
+from flask import request, jsonify
+from flask_restx import Namespace, Resource
+from flask_restx import  fields
+from flask_jwt_extended import create_access_token, create_refresh_token, get_jwt_identity, verify_jwt_in_request
 
 
+login_ns = Namespace('auth', description='Authentication related operations')
 
-login_bp = Blueprint('login', __name__)
+# Определение модели для логина
+login_model = login_ns.model('Login', {
+    'username': fields.String(required=True, description='Username for login'),
+    'password': fields.String(required=True, description='Password for login')
+})
 
+# Определение модели для обновления токена
+refresh_model = login_ns.model('RefreshToken', {
+    'refresh_token': fields.String(required=True, description='Refresh token for renewing access token')
+})
 
-# Основная страница
-@login_bp.route('/')
-def index():
-    return render_template('login.html')
+response_auth = login_ns.model('Tokens', {
+    'access_token': fields.String(description='Access token for user'),
+    'refresh_token': fields.String(description='Refresh token for user')
+})
 
+@login_ns.route('/')
+class Auth(Resource):
+    @login_ns.expect(login_model)
+    @login_ns.marshal_with(response_auth)
+    def post(self):
+        from app.database.user_manager import UserManager
+        db = UserManager()
+        username = request.json.get("username", None)
+        password = request.json.get("password", None)
 
-# Маршрут для входа (авторизации)
-@login_bp.route('/auth', methods=['POST'])
-def auth():
-    from app.database.user_manager import UserManager
-    # Создаем экземпляр менеджера базы данных
-    db = UserManager()
-    username = request.json.get("username", None)
-    password = request.json.get("password", None)
+        if not db.user_exists(username) or not db.check_password(username, password):
+            return {"msg": "Bad username or password"}, 401
 
-    # Проверяем пользователя в базе данных
-    if not db.user_exists(username) or not db.check_password(username, password):
-        return jsonify({"msg": "Bad username or password"}), 401
+        # Генерируем Access и Refresh токены
+        access_token = create_access_token(identity=username)
+        refresh_token = create_refresh_token(identity=username)
 
-    # Генерируем JWT токен
-    access_token = create_access_token(identity=username)
-    session['access_token'] = access_token  # Сохраняем токен в сессии
-    return jsonify(access_token=access_token)
+        return {
+            "access_token": access_token,
+            "refresh_token": refresh_token
+        }, 200
 
+@login_ns.route('/refresh')
+class Auth(Resource):
+    @login_ns.expect(refresh_model)  # Использование модели для валидации запроса
+    @login_ns.marshal_with(response_auth)
+    def post(self):
+        # Получение токена из тела запроса
+        refresh_token = request.json.get('refresh_token', None)
 
-# Маршрут для страницы входа
-@login_bp.route('/login', methods=['GET'])
-def login():
-    return render_template('login.html')
+        if not refresh_token:
+            return jsonify({"msg": "Missing refresh token"}), 400
 
-# Выход из системы
-@login_bp.route('/logout')
-def logout():
-    return jsonify({"msg": "Logout successful"}), 200
+        try:
+            # Явная валидация токена
+            verify_jwt_in_request(refresh=True, locations=["json"])
+        except Exception as e:
+            return jsonify({"msg": str(e)}), 401
+
+        # Получение текущего пользователя
+        current_user = get_jwt_identity()
+
+        # Генерация нового access токена
+        new_access_token = create_access_token(identity=current_user)
+        new_refresh_token = create_refresh_token(identity = current_user)
+        return {"access_token": new_access_token,
+                        "refresh_token": new_refresh_token
+                        }, 200
