@@ -19,8 +19,8 @@ refresh_model = login_ns.model('RefreshToken', {
 })
 
 response_auth = login_ns.model('Tokens', {
-    'access_token': fields.String(description='Access token for user'),
-    'refresh_token': fields.String(description='Refresh token for user')
+    'access_token': fields.Raw(required=True, description='Access token for user'),
+    'refresh_token': fields.Raw(required=True, description='Refresh token for user')
 })
 
 @login_ns.route('/')
@@ -33,6 +33,10 @@ class Auth(Resource):
         db = UserManager()
         username = request.json.get("username", None)
         password = request.json.get("password", None)
+
+        print(username)
+        print(password)
+        
 
         if not db.user_exists(username) or not db.check_password(username, password):
             return {"msg": "Bad username or password"}, 401
@@ -48,6 +52,9 @@ class Auth(Resource):
 
         access_token = create_access_token(identity=additional_claims)
         refresh_token = create_refresh_token(identity=additional_claims)
+
+        print(f"Generated access_token: {access_token}")
+        print(f"Generated refresh_token: {refresh_token}")
 
         return {
             "access_token": access_token,
