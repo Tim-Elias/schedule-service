@@ -2,6 +2,7 @@ from flask import request
 from flask_restx import Namespace, Resource, fields
 from flask_jwt_extended import jwt_required
 from app.validators import validate_uuid, validate_uuid_param
+from flask_cors import cross_origin
 
 schedule_details_ns = Namespace('schedule', description='Schedule Details operations')
 
@@ -21,6 +22,7 @@ schedule_detail_model = schedule_details_ns.model('ScheduleDetail', {
 @schedule_details_ns.route('/<string:schedule_id>/view')
 class ScheduleDetailResource(Resource):
     @jwt_required()
+    @cross_origin()
     @schedule_details_ns.marshal_with(schedule_detail_model)
     @validate_uuid_param  # Используем декоратор для проверки валидности schedule_i
     def get(self, schedule_id):

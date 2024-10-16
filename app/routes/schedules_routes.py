@@ -2,6 +2,7 @@ from flask import request
 from flask_restx import Namespace, Resource, fields
 from flask_jwt_extended import jwt_required
 import logging
+from flask_cors import cross_origin
 
 # Настройка логирования
 app_logger = logging.getLogger('app_logger')
@@ -40,6 +41,7 @@ get_schedule_model = schedules_ns.model('GetSchedules', {
 @schedules_ns.route('/')
 class AllSchedulesResource(Resource):
     @jwt_required()
+    @cross_origin()
     @schedules_ns.expect(get_schedule_model)
     @schedules_ns.marshal_list_with(schedule_response_model)
     def get(self):

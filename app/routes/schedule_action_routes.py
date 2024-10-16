@@ -6,6 +6,7 @@ from app.scheduler.scheduler_actions import activate_scheduler
 import logging
 from datetime import datetime
 from app.validators import validate_uuid, validate_uuid_param
+from flask_cors import cross_origin
 
 schedule_actions_ns = Namespace('schedule', description='Schedule Actions operations')
 
@@ -33,6 +34,7 @@ class ScheduleCreate(Resource):
     @schedule_actions_ns.expect(new_schedule_model)
     @schedule_actions_ns.marshal_with(response_model)
     @jwt_required()
+    @cross_origin()
     def post(self):
         from app.database.schedule_manager import ScheduleManager
         db = ScheduleManager()
@@ -146,6 +148,7 @@ class ScheduleEdite(Resource):
     @schedule_actions_ns.marshal_with(response_model)
     @validate_uuid_param  # Используем декоратор для проверки валидности schedule_id
     @jwt_required()
+    @cross_origin()
     def post(self, id):
         from app.database.schedule_manager import ScheduleManager
         db = ScheduleManager()
@@ -228,6 +231,7 @@ class ScheduleEdite(Resource):
 class ScheduleDelete(Resource):
     @schedule_actions_ns.marshal_with(response_model)
     @jwt_required()
+    @cross_origin()
     @validate_uuid_param  # Используем декоратор для проверки валидности schedule_i
     def delete(self, id):
         from app.database.schedule_manager import ScheduleManager

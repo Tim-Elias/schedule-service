@@ -2,6 +2,7 @@ from flask import request, jsonify
 from flask_restx import Namespace, Resource
 from flask_restx import  fields
 from flask_jwt_extended import create_access_token, create_refresh_token, get_jwt_identity, verify_jwt_in_request
+from flask_cors import cross_origin
 
 
 login_ns = Namespace('auth', description='Authentication related operations')
@@ -26,6 +27,7 @@ response_auth = login_ns.model('Tokens', {
 class Auth(Resource):
     @login_ns.expect(login_model)
     @login_ns.marshal_with(response_auth)
+    @cross_origin()
     def post(self):
         from app.database.user_manager import UserManager
         db = UserManager()
@@ -48,6 +50,7 @@ class Auth(Resource):
 class Auth(Resource):
     @login_ns.expect(refresh_model)  # Использование модели для валидации запроса
     @login_ns.marshal_with(response_auth)
+    @cross_origin()
     def post(self):
         # Получение токена из тела запроса
         refresh_token = request.json.get('refresh_token', None)
