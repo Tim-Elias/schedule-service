@@ -1,4 +1,5 @@
 from flask import Flask
+from flask_cors import CORS
 from flask_jwt_extended import JWTManager
 from flask_jwt_extended import verify_jwt_in_request, get_jwt_identity
 from flask_restx import Api
@@ -19,7 +20,7 @@ load_dotenv()
 def create_app():
     import request_logger, app_logger
     app = Flask(__name__)
-    
+    CORS(app)
     # Настройки приложения
     database_url = os.getenv('DATABASE_URL')
     app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')

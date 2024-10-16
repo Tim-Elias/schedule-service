@@ -1,5 +1,7 @@
 # schedule-service
 schedule-service
+# Первый запуск и инициализация базы данных
+python run.py
 # Устанавливает нового админа
 python password.py 
 # Устанавливает все миграции
