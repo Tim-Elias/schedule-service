@@ -31,10 +31,10 @@ response_model = schedule_actions_ns.model('ActionResponse', {
 
 @schedule_actions_ns.route('/')
 class ScheduleCreate(Resource):
+    @cross_origin()
     @schedule_actions_ns.expect(new_schedule_model)
     @schedule_actions_ns.marshal_with(response_model)
     @jwt_required()
-    @cross_origin()
     def post(self):
         from app.database.schedule_manager import ScheduleManager
         db = ScheduleManager()
@@ -144,11 +144,11 @@ edit_schedule_model = schedule_actions_ns.model('EditSchedule', {
 
 @schedule_actions_ns.route('/<string:id>/edit')
 class ScheduleEdite(Resource):
+    @cross_origin()
     @schedule_actions_ns.expect(edit_schedule_model)
     @schedule_actions_ns.marshal_with(response_model)
     @validate_uuid_param  # Используем декоратор для проверки валидности schedule_id
     @jwt_required()
-    @cross_origin()
     def post(self, id):
         from app.database.schedule_manager import ScheduleManager
         db = ScheduleManager()
@@ -230,8 +230,8 @@ class ScheduleEdite(Resource):
 @schedule_actions_ns.route('/<string:id>/delete')
 class ScheduleDelete(Resource):
     @schedule_actions_ns.marshal_with(response_model)
-    @jwt_required()
     @cross_origin()
+    @jwt_required()
     @validate_uuid_param  # Используем декоратор для проверки валидности schedule_i
     def delete(self, id):
         from app.database.schedule_manager import ScheduleManager

@@ -21,8 +21,8 @@ schedule_detail_model = schedule_details_ns.model('ScheduleDetail', {
 
 @schedule_details_ns.route('/<string:schedule_id>/view')
 class ScheduleDetailResource(Resource):
-    @jwt_required()
     @cross_origin()
+    @jwt_required()
     @schedule_details_ns.marshal_with(schedule_detail_model)
     @validate_uuid_param  # Используем декоратор для проверки валидности schedule_i
     def get(self, schedule_id):

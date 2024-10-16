@@ -25,9 +25,9 @@ response_auth = login_ns.model('Tokens', {
 
 @login_ns.route('/')
 class Auth(Resource):
+    @cross_origin()
     @login_ns.expect(login_model)
     @login_ns.marshal_with(response_auth)
-    @cross_origin()
     def post(self):
         from app.database.user_manager import UserManager
         db = UserManager()
@@ -37,9 +37,17 @@ class Auth(Resource):
         if not db.user_exists(username) or not db.check_password(username, password):
             return {"msg": "Bad username or password"}, 401
 
-        # Генерируем Access и Refresh токены
-        access_token = create_access_token(identity=username)
-        refresh_token = create_refresh_token(identity=username)
+        # Получаем user_id из базы данных по username
+        user_id = db.get_user_id_by_username(username)
+
+        # Генерируем Access и Refresh токены с дополнительной информацией
+        additional_claims = {
+            "user_id": user_id,
+            "username": username
+        }
+
+        access_token = create_access_token(identity=additional_claims)
+        refresh_token = create_refresh_token(identity=additional_claims)
 
         return {
             "access_token": access_token,
@@ -48,9 +56,9 @@ class Auth(Resource):
 
 @login_ns.route('/refresh')
 class Auth(Resource):
+    @cross_origin()
     @login_ns.expect(refresh_model)  # Использование модели для валидации запроса
     @login_ns.marshal_with(response_auth)
-    @cross_origin()
     def post(self):
         # Получение токена из тела запроса
         refresh_token = request.json.get('refresh_token', None)

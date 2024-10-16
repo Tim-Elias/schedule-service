@@ -35,13 +35,6 @@ class UserManager:
             session.commit()
         session.close()
 
-    def add_user_google(self, email, auth_type='google'):
-        """Добавляем пользователя через google"""
-        session = self.Session()
-        new_user = User(user_id=email, auth_type=auth_type)
-        session.add(new_user)
-        session.commit()
-        session.close()
 
     def user_exists(self, username):
         """Проверка существования пользователя по имени"""
@@ -50,25 +43,7 @@ class UserManager:
         session.close()
         return exists_query
     
-    def google_user_exists(self, username):
-        """Проверка существования пользователя по имени"""
-        session = self.Session()
-        exists_query = session.query(exists().where(User.google_id == username)).scalar()
-        session.close()
-        return exists_query
     
-    def get_user_by_google_id(self, email):
-        """Получить пользователя по google_id"""
-        session = self.Session()
-        try:
-            # Получаем пользователя по id
-            user = session.query(User).filter_by(user_id=email).first()
-        finally:
-            # Закрываем сессию в блоке finally, чтобы гарантировать закрытие независимо от результата запроса
-            session.close()
-
-        # Возвращаем найденное расписание или None, если не найдено
-        return user
     
     def delete_user_by_username(self, username):
         """Удалить пользователя с заданным user_id"""
@@ -92,3 +67,13 @@ class UserManager:
 
         finally:
             session.close()  # Закрываем сессию
+
+
+    def get_user_id_by_username(self, username):
+        session=self.Session()
+        try:
+            user = session.query(User).filter_by(user_id=username).first()
+            user_id=user.id
+            return user_id
+        finally:
+            session.close()

@@ -40,8 +40,8 @@ get_logs_by_schedule_model = request_logs_ns.model('GetLogsBySchedule', {
 
 @request_logs_ns.route('/')
 class RequestLogsResource(Resource):
-    @jwt_required()
     @cross_origin()
+    @jwt_required()
     @request_logs_ns.expect(get_logs_model)
     @request_logs_ns.marshal_list_with(log_response_model)
     def get(self):
@@ -81,8 +81,8 @@ class RequestLogsResource(Resource):
 
 @request_logs_ns.route('/<string:schedule_id>')
 class RequestLogResource(Resource):
-    @jwt_required()
     @cross_origin()
+    @jwt_required()
     @request_logs_ns.expect(get_logs_by_schedule_model)
     @request_logs_ns.marshal_with(log_response_model)
     @validate_uuid_param  # Используем декоратор для проверки валидности schedule_id
